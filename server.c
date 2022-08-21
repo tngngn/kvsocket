@@ -9,31 +9,13 @@
 #include <arpa/inet.h>
 
 #define MAX_INPUT_SIZE 256
-#define PORT 4444
 
 void error(char *msg)
 {
     perror(msg);
     exit(1);
 }
-/*
-void dostuff (int sock)
-{
-   int n;
-   char buffer[256];
-      
-   bzero(buffer,256);
-   n = read(sock,buffer,255);
-   if (n < 0) error("ERROR reading from socket");
-   printf("Client: %s\n",buffer);
-   if(strcmp(buffer, "exit")==0) {
-        printf("disconnected from client");
-        exit(1);
-    }
-   n = write(sock,"logged",6);
-   if (n < 0) error("ERROR writing to socket");
-}
-*/
+
 int main(int argc, char *argv[]) {
     int sockfd, newsockfd, portno, clilen;
     struct sockaddr_in serv_addr, cli_addr;
@@ -72,20 +54,6 @@ int main(int argc, char *argv[]) {
         if (newsockfd < 0) 
             error("ERROR on accept");
         printf("connected to client from %s:%d\n", inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
-/*
-        if (newsockfd < 0) 
-            error("ERROR on accept");
-        pid = fork();
-        printf("%d\n",pid);
-        if (pid < 0)
-            error("ERROR on fork");
-        if (pid == 0)  {
-            close(sockfd);
-            dostuff(newsockfd);
-            exit(0);
-        }
-     else close(newsockfd);
-     */
         
         if((childpid = fork()) == 0) {
             close(sockfd);

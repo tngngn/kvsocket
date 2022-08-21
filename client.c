@@ -9,7 +9,6 @@
 #include <arpa/inet.h>
 
 #define MAX_INPUT_SIZE 256
-#define PORT 4444
 
 void error(char *msg)
 {
