@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -19,8 +20,6 @@ void error(char *msg) {
 typedef struct kv {  
     int value;
 } node;
-
-node *store[MAXSZ];
 
 int main(int argc, char *argv[]) {
     int sockfd, newsockfd, portno, clilen;
@@ -53,8 +52,13 @@ int main(int argc, char *argv[]) {
     printf("bind to port %d\n", portno);
     listen(sockfd,5);
     clilen = sizeof(cli_addr);
-    
-
+    node *kvstore;
+    void *ptr;
+    ptr = mmap(0, sizeof(kvstore), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+    node *store = ptr;
+    for (int i;i<MAXSZ;i++) {
+        store[i].value = 0;
+    }
     while(1) {
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
         if (newsockfd < 0) 
@@ -84,8 +88,8 @@ int main(int argc, char *argv[]) {
                     
                     no = (node *)malloc(sizeof(node));
                     no->value = atoi(value);
-                    if (store[k] == NULL) {
-                        store[k] = no;
+                    if (store[k].value == 0) {
+                        store[k].value = no->value;
                         n = write(newsockfd,"logged",6);
                         // bzero(buffer,MAX_INPUT_SIZE);
                     }
@@ -102,10 +106,10 @@ int main(int argc, char *argv[]) {
                     char * key = token;
 
                     int k = atoi(key);
-                    if (store[k] == NULL) {
+                    if (store[k].value == 0) {
                         n = write(newsockfd,"key not existed",16);
                     } else {
-                        no = store[k];
+                        no->value = store[k].value;
                         printf("value: %d \n", no->value);
                         snprintf(buffer,MAX_INPUT_SIZE, "%d", no->value);
                         n = write(newsockfd,buffer,MAX_INPUT_SIZE-1);
@@ -120,7 +124,7 @@ int main(int argc, char *argv[]) {
                     char * key = token;
                     
                     int k = atoi(key);
-                    store[k] = NULL;
+                    store[k].value = 0;
                     n = write(newsockfd,"deleted",7);
                 }
             }
